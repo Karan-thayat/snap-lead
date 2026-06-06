@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template_string, request, redirect
 import psycopg2
 
@@ -47,9 +48,11 @@ HTML_TEMPLATE = """
 </body>
 </html>
 """
-
+DATABASE_URL = os.environ.get("DATABASE_URL")
 def get_db_connection():
-    return psycopg2.connect(**DB_PARAMS)
+    if not DATABASE_URL:
+        return psycopg2.connect(host="localhost",database="snaphomz",user="karan")
+    return psycopg2.connect(DATABASE_URL)
 
 @app.route('/')
 def index():
