@@ -4,11 +4,14 @@ import psycopg2
 
 app = Flask(__name__)
 
-# Local Database connection parameters
+# Grab the Cloud URL if it exists (Vercel uses this)
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+# Local Database fallback (Your laptop uses this)
 DB_PARAMS = {
     "dbname": "snaphomz", 
     "user": "karan", 
-    "password": "password",  # Change this to your local Postgres password if needed
+    "password": "password", 
     "host": "localhost",
     "port": "5432"
 }
@@ -17,7 +20,7 @@ HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SnapLead Approval Queue</title>
+    <title>SnapLead AI Content Queue</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; padding: 40px; color: #333; }
         .container { max-width: 800px; margin: auto; }
@@ -51,14 +54,16 @@ HTML_TEMPLATE = """
 """
 
 def get_db_connection():
-    # Primary local fallback using your defined DB_PARAMS
+    # If Vercel provides the cloud URL, use the cloud DB
+    if DATABASE_URL:
+        return psycopg2.connect(DATABASE_URL)
+    # Otherwise, fall back to your local laptop database
     return psycopg2.connect(**DB_PARAMS)
 
 @app.route('/')
 def index():
     conn = get_db_connection()
     cur = conn.cursor()
-    # Fixed: Changed from 'draft' to 'pending' to match n8n ingestion pipeline
     cur.execute("SELECT * FROM seo_content_queue WHERE review_status = 'pending'")
     posts = cur.fetchall()
     conn.close()
