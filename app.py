@@ -1,4 +1,3 @@
-import os
 from flask import Flask, render_template_string, request, redirect
 import psycopg2
 
@@ -48,17 +47,15 @@ HTML_TEMPLATE = """
 </body>
 </html>
 """
-DATABASE_URL = os.environ.get("DATABASE_URL")
+
 def get_db_connection():
-    if not DATABASE_URL:
-        return psycopg2.connect(host="localhost",database="snaphomz",user="karan")
-    return psycopg2.connect(DATABASE_URL)
+    return psycopg2.connect(**DB_PARAMS)
 
 @app.route('/')
 def index():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM seo_content_queue WHERE review_status = 'draft'")
+    cur.execute("SELECT * FROM seo_content_queue WHERE review_status = 'pending'")
     posts = cur.fetchall()
     conn.close()
     return render_template_string(HTML_TEMPLATE, posts=posts)
