@@ -1,14 +1,16 @@
+import os
 from flask import Flask, render_template_string, request, redirect
 import psycopg2
 
 app = Flask(__name__)
 
-# Database connection parameters
+# Local Database connection parameters
 DB_PARAMS = {
     "dbname": "snaphomz", 
     "user": "karan", 
-    "password": "password", 
-    "host": "localhost"
+    "password": "password",  # Change this to your local Postgres password if needed
+    "host": "localhost",
+    "port": "5432"
 }
 
 HTML_TEMPLATE = """
@@ -49,12 +51,14 @@ HTML_TEMPLATE = """
 """
 
 def get_db_connection():
+    # Primary local fallback using your defined DB_PARAMS
     return psycopg2.connect(**DB_PARAMS)
 
 @app.route('/')
 def index():
     conn = get_db_connection()
     cur = conn.cursor()
+    # Fixed: Changed from 'draft' to 'pending' to match n8n ingestion pipeline
     cur.execute("SELECT * FROM seo_content_queue WHERE review_status = 'pending'")
     posts = cur.fetchall()
     conn.close()
